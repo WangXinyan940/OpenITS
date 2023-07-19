@@ -134,10 +134,10 @@ def create_rotamer_14_energy_group(
 
 
     upforce = mm.CustomBondForce(
-        f"{scale}*4*epsilon*((sigma/r)^12-(sigma/r)^6)+{scale}*ONE_4PI_EPS0*qq/r"
+        f"step(1.1-r)*{scale}*(4*epsilon*((sigma/r)^12-(sigma/r)^6)+ONE_4PI_EPS0*qq/r)"
     )
     dnforce = mm.CustomBondForce(
-        f"-{scale}*4*epsilon*((sigma/r)^12-(sigma/r)^6)-{scale}*ONE_4PI_EPS0*qq/r"
+        f"step(1.1-r)*{scale}*(-4*epsilon*((sigma/r)^12-(sigma/r)^6)-ONE_4PI_EPS0*qq/r)"
     )
     upforce.setName("Positive Interaction")
     dnforce.setName("Negative Interaction")
