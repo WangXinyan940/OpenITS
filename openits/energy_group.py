@@ -132,12 +132,12 @@ def create_rotamer_14_energy_group(
             for jj in [j for j in conn[rotamer[1]] if j not in rotamer]:
                 pairs.append([ii, jj])
 
-
+    cutoff = nbforce.getCutoffDistance().value_in_unit(unit.nanometer)
     upforce = mm.CustomBondForce(
-        f"step(1.1-r)*{scale}*(4*epsilon*((sigma/r)^12-(sigma/r)^6)+ONE_4PI_EPS0*qq/r)"
+        f"step({cutoff}-r)*{scale}*(4*epsilon*((sigma/r)^12-(sigma/r)^6)+ONE_4PI_EPS0*qq/r)"
     )
     dnforce = mm.CustomBondForce(
-        f"step(1.1-r)*{scale}*(-4*epsilon*((sigma/r)^12-(sigma/r)^6)-ONE_4PI_EPS0*qq/r)"
+        f"step({cutoff}-r)*{scale}*(-4*epsilon*((sigma/r)^12-(sigma/r)^6)-ONE_4PI_EPS0*qq/r)"
     )
     upforce.setName("Positive Interaction")
     dnforce.setName("Negative Interaction")
