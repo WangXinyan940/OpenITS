@@ -26,8 +26,8 @@ def create_nonbonded_energy_group(
     dnforce = mm.CustomNonbondedForce(
         f"-{scale}*4*epsilon*((sigma/r)^12-(sigma/r)^6)-{scale}*ONE_4PI_EPS0*qq/r; sigma=0.5*(sigma1+sigma2); epsilon=sqrt(epsilon1*epsilon2); qq=q1*q2"
     )
-    upforce.setName("Positive Interaction")
-    dnforce.setName("Negative Interaction")
+    upforce.setName("+U_inter")
+    dnforce.setName("-U_inter")
     upforce.addPerParticleParameter("q")
     upforce.addPerParticleParameter("sigma")
     upforce.addPerParticleParameter("epsilon")
@@ -82,8 +82,8 @@ def create_rotamer_torsion_energy_group(
 
     upforce = mm.PeriodicTorsionForce()
     dnforce = mm.PeriodicTorsionForce()
-    upforce.setName("Positive Interaction")
-    dnforce.setName("Negative Interaction")
+    upforce.setName("+U_tor")
+    dnforce.setName("-U_tor")
     for ntorsion in range(torsionforce.getNumTorsions()):
         i, j, k, l, per, phase, k = torsionforce.getTorsionParameters(ntorsion)
         if check_rotamer_in_list([j, k], rotamers):
@@ -137,10 +137,10 @@ def create_rotamer_14_energy_group(
         f"step({cutoff}-r)*{scale}*(4*epsilon*((sigma/r)^12-(sigma/r)^6)+ONE_4PI_EPS0*qq/r)"
     )
     dnforce = mm.CustomBondForce(
-        f"step({cutoff}-r)*{scale}*(-4*epsilon*((sigma/r)^12-(sigma/r)^6)-ONE_4PI_EPS0*qq/r)"
+        f"-step({cutoff}-r)*{scale}*(4*epsilon*((sigma/r)^12-(sigma/r)^6)+ONE_4PI_EPS0*qq/r)"
     )
-    upforce.setName("Positive Interaction")
-    dnforce.setName("Negative Interaction")
+    upforce.setName("+U_14")
+    dnforce.setName("-U_14")
     upforce.addPerBondParameter("qq")
     upforce.addPerBondParameter("sigma")
     upforce.addPerBondParameter("epsilon")
