@@ -10,7 +10,7 @@ ONE_4PI_EPS0 = 138.93545764438198
 
 
 def create_nonbonded_energy_group(
-    system: mm.System, group1: List[int], group2: List[int], scale: float = 1.0
+    system: mm.System, group1: List[int], group2: List[int], scale: float = 1.0, energy_group: int = 1
 ) -> mm.System:
     nbforce: mm.NonbondedForce = None
     for force in system.getForces():
@@ -52,7 +52,7 @@ def create_nonbonded_energy_group(
         dnforce.setNonbondedMethod(upforce.NoCutoff)
     upforce.addInteractionGroup(group1, group2)
     dnforce.addInteractionGroup(group1, group2)
-    upforce.setForceGroup(1)
+    upforce.setForceGroup(energy_group)
     dnforce.setForceGroup(0)
     system.addForce(upforce)
     system.addForce(dnforce)
@@ -69,7 +69,7 @@ def check_rotamer_in_list(rot: List[int], rotlist: List[List[int]]) -> bool:
 
 
 def create_rotamer_torsion_energy_group(
-    system: mm.System, rotamers: List[List[int]], scale: float = 1.0
+    system: mm.System, rotamers: List[List[int]], scale: float = 1.0, energy_group: int = 1
 ) -> mm.System:
     torsionforce = None
     for force in system.getForces():
@@ -89,7 +89,7 @@ def create_rotamer_torsion_energy_group(
         if check_rotamer_in_list([j, k], rotamers):
             upforce.addTorsion(i, j, k, l, per, phase, scale * k)
             dnforce.addTorsion(i, j, k, l, per, phase, - scale * k)
-    upforce.setForceGroup(1)
+    upforce.setForceGroup(energy_group)
     dnforce.setForceGroup(0)
     system.addForce(upforce)
     system.addForce(dnforce)
@@ -97,7 +97,7 @@ def create_rotamer_torsion_energy_group(
 
 
 def create_rotamer_14_energy_group(
-    system: mm.System, rotamers: List[List[int]], topology: app.Topology, scale: float = 1.0
+    system: mm.System, rotamers: List[List[int]], topology: app.Topology, scale: float = 1.0, energy_group: int = 1
 ) -> mm.System:
     torsionforce = None
     nbforce = None
@@ -154,7 +154,7 @@ def create_rotamer_14_energy_group(
         if check_rotamer_in_list([ii, jj], pairs):
             upforce.addBond(ii, jj, [chrgprod, sig, eps])
             dnforce.addBond(ii, jj, [chrgprod, sig, eps])
-    upforce.setForceGroup(1)
+    upforce.setForceGroup(energy_group)
     dnforce.setForceGroup(0)
     system.addForce(upforce)
     system.addForce(dnforce)
