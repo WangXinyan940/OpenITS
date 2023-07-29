@@ -19,24 +19,36 @@ class ITSLangevinIntegratorGenerator:
         dt: float = 0.002,
         log_nk: List[float] = None,
         log_nk2: List[float] = None,
+        its_log: str = None,
         boost_group: int = EnhancedGroup.ALL
     ):
         """Initialize the ITS Langevin Integrator"""
-        self.temperature_list = temperature_list
+        
         self.friction = friction
         self.dt = dt
         self.integrator = None
-        if log_nk is not None:
+
+        if its_log is not None:
+            temperature_list, log_nk, log_nk2 = self.load_log(its_log)
+            self.temperature_list = temperature_list
             self.log_nk = np.array(log_nk)
-        else:
-            self.log_nk = np.zeros((len(temperature_list),))
-        if log_nk2 is not None:
             self.log_nk2 = np.array(log_nk2)
-        else:
-            self.log_nk2 = np.zeros((len(temperature_list),))
-        print("Use log_nk", self.log_nk)
-        if log_nk2 is not None:
+            print("Use log_nk", self.log_nk)
             print("Use log_nk2", self.log_nk2)
+        else:
+            self.temperature_list = temperature_list
+            if log_nk is not None:
+                self.log_nk = np.array(log_nk)
+            else:
+                self.log_nk = np.zeros((len(temperature_list),))
+            if log_nk2 is not None:
+                self.log_nk2 = np.array(log_nk2)
+            else:
+                self.log_nk2 = np.zeros((len(temperature_list),))
+            print("Use log_nk", self.log_nk)
+            if log_nk2 is not None:
+                print("Use log_nk2", self.log_nk2)
+
         self.boost_group = boost_group
         self.set_integrator(boost_group=boost_group)
 
@@ -212,4 +224,19 @@ class ITSLangevinIntegratorGenerator:
 
         self.set_integrator(self.boost_group)
         
+    def load_log(self, filename):
+        # return temp_list and log_nks
+        import json
+        with open(filename, "r") as f:
+            data = json.load(f)
+        return data["temp_list"], data["log_nk"], data["log_nk2"]
 
+    def write_log(self, filename):
+        data = {
+            "temp_list": self.temp_list,
+            "log_nk": self.log_nk,
+            "log_nk2": self.log_nk2
+        }
+        import json
+        with open(filename, "w") as f:
+            json.dump(data, f, indent=4)
