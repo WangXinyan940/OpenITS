@@ -130,7 +130,11 @@ def create_rotamer_14_energy_group(
     for rotamer in rotamers:
         for ii in  [i for i in conn[rotamer[0]] if i not in rotamer]:
             for jj in [j for j in conn[rotamer[1]] if j not in rotamer]:
-                pairs.append([ii, jj])
+                if ii < jj:
+                    pairs.append((ii, jj))
+                else:
+                    pairs.append((jj, ii))
+    pairs = list(set(pairs))
 
     cutoff = nbforce.getCutoffDistance().value_in_unit(unit.nanometer)
     upforce = mm.CustomBondForce(
@@ -159,3 +163,82 @@ def create_rotamer_14_energy_group(
     system.addForce(upforce)
     system.addForce(dnforce)
     return system
+
+
+protein_residues = [
+    "ALA", "ARG", "ASN", "ASP", "CYS", 
+    "GLN", "GLU", "GLY", "HIS", "ILE", 
+    "LEU", "LYS", "MET", "PHE", "PRO",
+    "SER", "THR", "TRP", "TYR", "VAL"
+]
+
+residue_rotamers = {
+    "ALA": [],
+    "ARG": [("CA", "CB"), ("CB", "CG"), ("CG", "CD"), ("CD", "NE"), ("NE", "CZ")],
+    "ASN": [("CA", "CB"), ("CB", "CG")],
+    "ASP": [("CA", "CB"), ("CB", "CG")],
+    "CYS": [("CA", "CB")],
+    "GLN": [("CA", "CB"), ("CB", "CG"), ("CG", "CD")],
+    "GLU": [("CA", "CB"), ("CB", "CG"), ("CG", "CD")],
+    "GLY": [],
+    "HIS": [("CA", "CB"), ("CB", "CG")],
+    "ILE": [("CA", "CB"), ("CB", "CG1")],
+    "LEU": [("CA", "CB"), ("CB", "CG")],
+    "LYS": [("CA", "CB"), ("CB", "CG"), ("CG", "CD"), ("CD", "CE")],
+    "MET": [("CA", "CB"), ("CB", "CG"), ("CG", "SD")],
+    "PHE": [("CA", "CB"), ("CB", "CG")],
+    "PRO": [],
+    "SER": [("CA", "CB")],
+    "THR": [("CA", "CB")],
+    "TRP": [("CA", "CB"), ("CB", "CG")],
+    "TYR": [("CA", "CB"), ("CB", "CG")],
+    "VAL": [("CA", "CB")]
+}
+
+
+def find_backbone_rotamers(top: app.Topology, residue_indices: List[int] = None) -> List[Tuple[int]]:
+    # loop dihedrals with C, N, CA
+    backbone_rots = []
+    bond: app.topology.Bond = None
+    for bond in top.bonds():
+        if residue_indices is not None and bond.atom1.residue.index not in residue_indices:
+            continue
+        if residue_indices is not None and bond.atom2.residue.index not in residue_indices:
+            continue
+        if bond.atom1.residue.name not in protein_residues or bond.atom2.residue.name not in protein_residues:
+            continue
+        if bond.atom1.name in ["C", "N", "CA"] and bond.atom2.name in ["C", "N", "CA"]:
+            ii = bond.atom1.index
+            jj = bond.atom2.index
+            if ii > jj:
+                ii, jj = jj, ii
+            backbone_rots.append((ii, jj))
+    return backbone_rots
+
+
+def find_sidechain_rotamers(top: app.Topology, residue_indices: List[int] = None) -> List[Tuple[int]]:
+    sidechain_rots = []
+    bond: app.topology.Bond = None
+    for bond in top.bonds():
+        if residue_indices is not None and bond.atom1.residue.index not in residue_indices:
+            continue
+        if residue_indices is not None and bond.atom2.residue.index not in residue_indices:
+            continue
+        if bond.atom1.residue.name not in protein_residues or bond.atom2.residue.name not in protein_residues:
+            continue
+        if bond.atom1.residue.index != bond.atom2.residue.index:
+            continue
+        rots = residue_rotamers[bond.atom1.residue.name]
+        found = False
+        for rot in rots:
+            if bond.atom1.name in rot and bond.atom2.name in rot:
+                found = True
+                break
+        if found:
+            ii = bond.atom1.index
+            jj = bond.atom2.index
+            if ii > jj:
+                ii, jj = jj, ii
+            sidechain_rots.append((ii, jj))
+    return sidechain_rots
+    
