@@ -52,8 +52,10 @@ class ITSLangevinIntegratorGenerator:
         self.boost_group = boost_group
         self.set_integrator(boost_group=boost_group)
 
-    def set_integrator(self, boost_group: int = EnhancedGroup.ALL):
+    def set_integrator(self, boost_group: int = None):
         """Set the ITS Langevin Integrator"""
+        if boost_group is None:
+            boost_group = self.boost_group
 
         temperature = min(self.temperature_list)  # K
         friction = self.friction  # 1/ps
