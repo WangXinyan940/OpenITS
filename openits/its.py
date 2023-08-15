@@ -48,7 +48,7 @@ class ITSLangevinIntegratorGenerator:
             else:
                 self.log_nk2 = np.zeros((len(temperature_list),))
             print("Use log_nk", self.log_nk)
-            if log_nk2 is not None:
+            if boost_group == EnhancedGroup.E1_AND_E2:
                 print("Use log_nk2", self.log_nk2)
 
         self.boost_group = boost_group
