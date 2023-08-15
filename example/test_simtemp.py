@@ -31,10 +31,10 @@ simulation = app.Simulation(pdb.topology, system, integrator)
 simulation.context.setPositions(pdb.positions)
 simulation.context.setVelocitiesToTemperature(300 * unit.kelvin)
 simulation.minimizeEnergy()
-simulation.reporters.append(app.DCDReporter("ref_dih.dcd", 500))
+simulation.reporters.append(app.DCDReporter("sim_temp.dcd", 500))
 simulation.reporters.append(
     app.StateDataReporter(
-        "ref_dih.out",
+        "sim_temp.out",
         500,
         step=True,
         potentialEnergy=True,
@@ -44,4 +44,5 @@ simulation.reporters.append(
         totalSteps=10 * 1000 * 250,
     )
 )
-simulation.step(10 * 1000 * 250)
+sim = app.SimulatedTempering(simulation, numTemperatures=31, minTemperature=300, maxTemperature=600, tempChangeInterval=500, reportInterval=500, reportFile="sim_temp.log")
+sim.step(10 * 1000 * 250)

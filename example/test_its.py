@@ -30,14 +30,10 @@ system = forcefield.createSystem(
 
 system.addForce(mm.MonteCarloBarostat(1 * unit.atmosphere, 300 * unit.kelvin, 25))
 
-rotamers = [[6, 8], [8, 14]]
-system = create_rotamer_torsion_energy_group(system, rotamers, energy_group=1)
-system = create_rotamer_14_energy_group(system, rotamers, pdb.topology, energy_group=1)
-
 # Define the temperature list
 temp_list = np.arange(300, 901, 5)
 int_gen = ITSLangevinIntegratorGenerator(
-    temp_list, 2.0, 0.004, boost_group=openits.EnhancedGroup.E1
+    temp_list, 2.0, 0.004, boost_group=openits.EnhancedGroup.ALL
 )
 
 start_state = None
@@ -55,7 +51,7 @@ for nloop in range(10):
     energy_list_1, energy_list_2 = [], []
     for nstep in trange(100):
         simulation.step(250)
-        state = simulation.context.getState(getEnergy=True, groups={1})
+        state = simulation.context.getState(getEnergy=True)
         energy_list_1.append(state.getPotentialEnergy().value_in_unit(unit.kilojoule_per_mole))
     energy_list_1 = np.array(energy_list_1)
     int_gen.update_nk(energy_list_1, ratio=0.75)
@@ -69,10 +65,10 @@ simulation = app.Simulation(pdb.topology, system, int_gen.integrator)
 simulation.context.setPeriodicBoxVectors(*start_state.getPeriodicBoxVectors())
 simulation.context.setPositions(start_state.getPositions())
 simulation.context.setVelocities(start_state.getVelocities())
-simulation.reporters.append(app.DCDReporter("boost_dih.dcd", 500))
+simulation.reporters.append(app.DCDReporter("boost_its.dcd", 500))
 simulation.reporters.append(
     app.StateDataReporter(
-        "boost_dih.out",
+        "boost_its.out",
         500,
         step=True,
         potentialEnergy=True,
@@ -83,5 +79,4 @@ simulation.reporters.append(
         speed=True
     )
 )
-simulation.reporters.append(EnergyGroupReporter("boost_dih.eg", 500, egroups=[0, 1]))
 simulation.step(10 * 1000 * 250)

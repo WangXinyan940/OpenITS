@@ -21,9 +21,14 @@ forcefield = app.ForceField("amber14-all.xml", "amber14/tip3p.xml")
 system = forcefield.createSystem(
     pdb.topology,
     nonbondedMethod=app.PME,
-    nonbondedCutoff=1.1 * unit.nanometer,
+    nonbondedCutoff=0.9 * unit.nanometer,
     constraints=app.HBonds,
+    rigidWater=True,
+    ewaldErrorTolerance=0.0005,
+    hydrogenMass=4 * unit.amu
 )
+
+system.addForce(mm.MonteCarloBarostat(1 * unit.atmosphere, 300 * unit.kelvin, 25))
 
 group1, group2 = [], []
 for res in pdb.topology.residues():
@@ -38,12 +43,10 @@ rotamers = [[6, 8], [8, 14]]
 system = create_rotamer_torsion_energy_group(system, rotamers, energy_group=2)
 system = create_rotamer_14_energy_group(system, rotamers, pdb.topology, energy_group=2)
 
-system.addForce(mm.MonteCarloBarostat(1 * unit.atmosphere, 300 * unit.kelvin, 25))
-
 # Define the temperature list
-temp_list = np.arange(300, 601, 10)
+temp_list = np.arange(300, 901, 5)
 int_gen = ITSLangevinIntegratorGenerator(
-    temp_list, 2.0, 0.002, boost_group=openits.EnhancedGroup.E1_AND_E2
+    temp_list, 2.0, 0.004, boost_group=openits.EnhancedGroup.E1_AND_E2
 )
 
 start_state = None
@@ -67,7 +70,7 @@ for nloop in range(10):
         energy_list_2.append(state.getPotentialEnergy().value_in_unit(unit.kilojoule_per_mole))
     energy_list_1 = np.array(energy_list_1)
     energy_list_2 = np.array(energy_list_2)
-    int_gen.update_nk(energy_list_1, energies_2=energy_list_2, ratio=0.5)
+    int_gen.update_nk(energy_list_1, energies_2=energy_list_2, ratio=0.75)
     start_state = simulation.context.getState(getPositions=True, getVelocities=True)
 
 # Run the production simulation
@@ -88,9 +91,9 @@ simulation.reporters.append(
         temperature=True,
         density=True,
         remainingTime=True,
-        totalSteps=5000 * 500,
+        totalSteps=10 * 1000 * 250,
         speed=True
     )
 )
-simulation.reporters.append(EnergyGroupReporter("boost_all.eg", 500, egroups=[0, 1]))
-simulation.step(5000 * 500)
+simulation.reporters.append(EnergyGroupReporter("boost_all.eg", 500, egroups=[0, 1, 2]))
+simulation.step(10 * 1000 * 250)

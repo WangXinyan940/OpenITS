@@ -4,23 +4,103 @@ import matplotlib.pyplot as plt
 import sys
 
 
-inp = sys.argv[1]
-out = sys.argv[2]
-traj = md.load(inp, top="system.pdb")
-phi_angles = md.compute_phi(traj)
-psi_angles = md.compute_psi(traj)
+# compute dihedral-dihedral distribution
+dih_list = [
+    [4, 6, 8, 14],
+    [6, 8, 14, 16]
+]
 
-# 将计算出的角度从弧度转换为度
-phi_angles = np.rad2deg(phi_angles[1])
-psi_angles = np.rad2deg(psi_angles[1])
 
-# 绘制Ramachandran plot
-plt.figure(figsize=(6, 6))
-plt.scatter(phi_angles, psi_angles, s=5, alpha=0.5)
-plt.xlim(-180, 180)
-plt.ylim(-180, 180)
+plt.figure(figsize=(14,8))
+plt.subplot(2, 3, 1)
+
+traj = md.load("ref_dih.dcd", top="system.pdb")[20:]
+dih_ref = md.compute_dihedrals(traj, dih_list)
+traj = md.load("boost_dih.dcd", top="system.pdb")
+dih_boost = md.compute_dihedrals(traj, dih_list)
+plt.scatter(dih_ref[:, 0], dih_ref[:, 1], label="ref", alpha=0.5)
+plt.scatter(dih_boost[:, 0], dih_boost[:, 1], label="boost", alpha=0.5)
+plt.scatter(dih_boost[-1,0], dih_boost[-1,1])
+plt.legend()
+plt.xlim(-np.pi, np.pi)
+plt.ylim(-np.pi, np.pi)
+
 plt.xlabel("Phi angles (degrees)")
 plt.ylabel("Psi angles (degrees)")
-plt.title("Ramachandran plot")
+plt.title("Ref vs dihedral boost")
 plt.grid()
-plt.savefig(out)
+
+plt.subplot(2, 3, 2)
+
+traj = md.load("ref_dih.dcd", top="system.pdb")[20:]
+dih_ref = md.compute_dihedrals(traj, dih_list)
+traj = md.load("boost_all.dcd", top="system.pdb")
+dih_boost = md.compute_dihedrals(traj, dih_list)
+plt.scatter(dih_ref[:, 0], dih_ref[:, 1], label="ref", alpha=0.5)
+plt.scatter(dih_boost[:, 0], dih_boost[:, 1], label="boost", alpha=0.5)
+plt.scatter(dih_boost[-1,0], dih_boost[-1,1])
+plt.legend()
+plt.xlim(-np.pi, np.pi)
+plt.ylim(-np.pi, np.pi)
+
+plt.xlabel("Phi angles (degrees)")
+plt.ylabel("Psi angles (degrees)")
+plt.title("Ref vs dih & nb boost")
+plt.grid()
+
+plt.subplot(2, 3, 3)
+
+traj = md.load("ref_dih.dcd", top="system.pdb")[20:]
+dih_ref = md.compute_dihedrals(traj, dih_list)
+traj = md.load("boost_nb.dcd", top="system.pdb")
+dih_boost = md.compute_dihedrals(traj, dih_list)
+plt.scatter(dih_ref[:, 0], dih_ref[:, 1], label="ref", alpha=0.5)
+plt.scatter(dih_boost[:, 0], dih_boost[:, 1], label="boost", alpha=0.5)
+plt.scatter(dih_boost[-1,0], dih_boost[-1,1])
+plt.legend()
+plt.xlim(-np.pi, np.pi)
+plt.ylim(-np.pi, np.pi)
+
+plt.xlabel("Phi angles (degrees)")
+plt.ylabel("Psi angles (degrees)")
+plt.title("Ref vs nb boost")
+plt.grid()
+
+plt.subplot(2, 3, 4)
+
+traj = md.load("ref_dih.dcd", top="system.pdb")[20:]
+dih_ref = md.compute_dihedrals(traj, dih_list)
+traj = md.load("boost_its.dcd", top="system.pdb")
+dih_boost = md.compute_dihedrals(traj, dih_list)
+plt.scatter(dih_ref[:, 0], dih_ref[:, 1], label="ref", alpha=0.5)
+plt.scatter(dih_boost[:, 0], dih_boost[:, 1], label="boost", alpha=0.5)
+plt.scatter(dih_boost[-1,0], dih_boost[-1,1])
+plt.legend()
+plt.xlim(-np.pi, np.pi)
+plt.ylim(-np.pi, np.pi)
+
+plt.xlabel("Phi angles (degrees)")
+plt.ylabel("Psi angles (degrees)")
+plt.title("Ref vs all boost")
+plt.grid()
+
+plt.subplot(2, 3, 5)
+
+traj = md.load("ref_dih.dcd", top="system.pdb")[20:]
+dih_ref = md.compute_dihedrals(traj, dih_list)
+traj = md.load("sim_temp.dcd", top="system.pdb")
+dih_boost = md.compute_dihedrals(traj, dih_list)
+plt.scatter(dih_ref[:, 0], dih_ref[:, 1], label="ref", alpha=0.5)
+plt.scatter(dih_boost[:, 0], dih_boost[:, 1], label="simtemp", alpha=0.5)
+plt.scatter(dih_boost[-1,0], dih_boost[-1,1])
+plt.legend()
+plt.xlim(-np.pi, np.pi)
+plt.ylim(-np.pi, np.pi)
+
+plt.xlabel("Phi angles (degrees)")
+plt.ylabel("Psi angles (degrees)")
+plt.title("Ref vs all simulating tempering")
+plt.grid()
+
+
+plt.savefig("compare.png")

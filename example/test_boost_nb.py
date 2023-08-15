@@ -30,9 +30,14 @@ system = forcefield.createSystem(
 
 system.addForce(mm.MonteCarloBarostat(1 * unit.atmosphere, 300 * unit.kelvin, 25))
 
-rotamers = [[6, 8], [8, 14]]
-system = create_rotamer_torsion_energy_group(system, rotamers, energy_group=1)
-system = create_rotamer_14_energy_group(system, rotamers, pdb.topology, energy_group=1)
+group1, group2 = [], []
+for res in pdb.topology.residues():
+    for atom in res.atoms():
+        if atom.index < 32:
+            group1.append(atom.index)
+        else:
+            group2.append(atom.index)
+system = create_nonbonded_energy_group(system, group1, group2, energy_group=1)
 
 # Define the temperature list
 temp_list = np.arange(300, 901, 5)
@@ -69,10 +74,10 @@ simulation = app.Simulation(pdb.topology, system, int_gen.integrator)
 simulation.context.setPeriodicBoxVectors(*start_state.getPeriodicBoxVectors())
 simulation.context.setPositions(start_state.getPositions())
 simulation.context.setVelocities(start_state.getVelocities())
-simulation.reporters.append(app.DCDReporter("boost_dih.dcd", 500))
+simulation.reporters.append(app.DCDReporter("boost_nb.dcd", 500))
 simulation.reporters.append(
     app.StateDataReporter(
-        "boost_dih.out",
+        "boost_nb.out",
         500,
         step=True,
         potentialEnergy=True,
@@ -83,5 +88,5 @@ simulation.reporters.append(
         speed=True
     )
 )
-simulation.reporters.append(EnergyGroupReporter("boost_dih.eg", 500, egroups=[0, 1]))
+simulation.reporters.append(EnergyGroupReporter("boost_nb.eg", 500, egroups=[0, 1]))
 simulation.step(10 * 1000 * 250)
