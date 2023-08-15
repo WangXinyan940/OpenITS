@@ -128,7 +128,7 @@ class ITSLangevinIntegratorGenerator:
             self.integ_addComputeGlobal("Aup", "+".join(A_up))
             self.integ_addComputeGlobal("Adown", "+".join(A_down))
             self.integ_addComputeGlobal("A", "Aup/Adown")
-            self.integ_addUpdateContextState()
+            self.integrator.addUpdateContextState()
             if boost_group == EnhancedGroup.E1:
                 self.integ_addComputePerDof("v", "v + dt*A*f1/m")
                 self.integ_addComputePerDof("v", "v + dt*f0/m")
