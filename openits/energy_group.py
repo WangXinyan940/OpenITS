@@ -23,39 +23,24 @@ def create_nonbonded_energy_group(
     upforce = mm.CustomNonbondedForce(
         f"{scale}*4*epsilon*((sigma/r)^12-(sigma/r)^6)+{scale}*ONE_4PI_EPS0*qq/r; sigma=0.5*(sigma1+sigma2); epsilon=sqrt(epsilon1*epsilon2); qq=q1*q2"
     )
-    dnforce = mm.CustomNonbondedForce(
-        f"-{scale}*4*epsilon*((sigma/r)^12-(sigma/r)^6)-{scale}*ONE_4PI_EPS0*qq/r; sigma=0.5*(sigma1+sigma2); epsilon=sqrt(epsilon1*epsilon2); qq=q1*q2"
-    )
-    upforce.setName("+U_inter")
-    dnforce.setName("-U_inter")
+    upforce.setName("U_inter")
     upforce.addPerParticleParameter("q")
     upforce.addPerParticleParameter("sigma")
     upforce.addPerParticleParameter("epsilon")
     upforce.addGlobalParameter("ONE_4PI_EPS0", ONE_4PI_EPS0)
-    dnforce.addPerParticleParameter("q")
-    dnforce.addPerParticleParameter("sigma")
-    dnforce.addPerParticleParameter("epsilon")
-    dnforce.addGlobalParameter("ONE_4PI_EPS0", ONE_4PI_EPS0)
     for nparticle in range(nbforce.getNumParticles()):
         chrg, sig, eps = nbforce.getParticleParameters(nparticle)
         upforce.addParticle([chrg, sig, eps])
-        dnforce.addParticle([chrg, sig, eps])
     for nexcl in range(nbforce.getNumExceptions()):
         ii, jj, chrgprod, sig, eps = nbforce.getExceptionParameters(nexcl)
         upforce.addExclusion(ii, jj)
-        dnforce.addExclusion(ii, jj)
     if nbforce.getNonbondedMethod() in [app.PME, app.CutoffPeriodic]:
         upforce.setNonbondedMethod(upforce.CutoffPeriodic)
-        dnforce.setNonbondedMethod(upforce.CutoffPeriodic)
     else:
         upforce.setNonbondedMethod(upforce.NoCutoff)
-        dnforce.setNonbondedMethod(upforce.NoCutoff)
     upforce.addInteractionGroup(group1, group2)
-    dnforce.addInteractionGroup(group1, group2)
     upforce.setForceGroup(energy_group)
-    dnforce.setForceGroup(0)
     system.addForce(upforce)
-    system.addForce(dnforce)
     return system
 
 
@@ -81,18 +66,13 @@ def create_rotamer_torsion_energy_group(
         )
 
     upforce = mm.PeriodicTorsionForce()
-    dnforce = mm.PeriodicTorsionForce()
-    upforce.setName("+U_tor")
-    dnforce.setName("-U_tor")
+    upforce.setName("U_tor")
     for ntorsion in range(torsionforce.getNumTorsions()):
         i, j, k, l, per, phase, k = torsionforce.getTorsionParameters(ntorsion)
         if check_rotamer_in_list([j, k], rotamers):
             upforce.addTorsion(i, j, k, l, per, phase, scale * k)
-            dnforce.addTorsion(i, j, k, l, per, phase, - scale * k)
     upforce.setForceGroup(energy_group)
-    dnforce.setForceGroup(0)
     system.addForce(upforce)
-    system.addForce(dnforce)
     return system
 
 
@@ -140,28 +120,17 @@ def create_rotamer_14_energy_group(
     upforce = mm.CustomBondForce(
         f"step({cutoff}-r)*{scale}*(4*epsilon*((sigma/r)^12-(sigma/r)^6)+ONE_4PI_EPS0*qq/r)"
     )
-    dnforce = mm.CustomBondForce(
-        f"-step({cutoff}-r)*{scale}*(4*epsilon*((sigma/r)^12-(sigma/r)^6)+ONE_4PI_EPS0*qq/r)"
-    )
     upforce.setName("+U_14")
-    dnforce.setName("-U_14")
     upforce.addPerBondParameter("qq")
     upforce.addPerBondParameter("sigma")
     upforce.addPerBondParameter("epsilon")
     upforce.addGlobalParameter("ONE_4PI_EPS0", ONE_4PI_EPS0)
-    dnforce.addPerBondParameter("qq")
-    dnforce.addPerBondParameter("sigma")
-    dnforce.addPerBondParameter("epsilon")
-    dnforce.addGlobalParameter("ONE_4PI_EPS0", ONE_4PI_EPS0)
     for nexcl in range(nbforce.getNumExceptions()):
         ii, jj, chrgprod, sig, eps = nbforce.getExceptionParameters(nexcl)
         if check_rotamer_in_list([ii, jj], pairs):
             upforce.addBond(ii, jj, [chrgprod, sig, eps])
-            dnforce.addBond(ii, jj, [chrgprod, sig, eps])
     upforce.setForceGroup(energy_group)
-    dnforce.setForceGroup(0)
     system.addForce(upforce)
-    system.addForce(dnforce)
     return system
 
 

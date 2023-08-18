@@ -130,10 +130,10 @@ class ITSLangevinIntegratorGenerator:
             self.integ_addComputeGlobal("A", "Aup/Adown")
             self.integrator.addUpdateContextState()
             if boost_group == EnhancedGroup.E1:
-                self.integ_addComputePerDof("v", "v + dt*A*f1/m")
+                self.integ_addComputePerDof("v", "v + dt*(A-1)*f1/m")
                 self.integ_addComputePerDof("v", "v + dt*f0/m")
             else:
-                self.integ_addComputePerDof("v", "v + dt*A*f/m")
+                self.integ_addComputePerDof("v", "v + dt*(A-1)*f/m")
 
         elif boost_group == EnhancedGroup.E1_AND_E2:
             self.integ_addGlobalVariable("vmax_1", 0.0)
@@ -205,8 +205,8 @@ class ITSLangevinIntegratorGenerator:
 
             self.integrator.addUpdateContextState()
             self.integ_addComputePerDof("v", "v + dt*f0/m")
-            self.integ_addComputePerDof("v", "v + dt*A_1*f1/m")
-            self.integ_addComputePerDof("v", "v + dt*A_2*f2/m")
+            self.integ_addComputePerDof("v", "v + dt*(A_1-1)*f1/m")
+            self.integ_addComputePerDof("v", "v + dt*(A_2-1)*f2/m")
 
         self.integrator.addConstrainVelocities()
         self.integ_addComputePerDof("x", "x + 0.5*dt*v")
