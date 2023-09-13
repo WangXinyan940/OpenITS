@@ -5,6 +5,7 @@ from .its import EnhancedGroup, ITSLangevinIntegratorGenerator
 from .utils import OpenITSException
 import numpy as np
 from tqdm import trange
+from typing import Union
 
 
 def optimize_logNk(
@@ -13,16 +14,16 @@ def optimize_logNk(
     init_pos,
     cell,
     platform=None,
-    n_loop=10,
+    n_loop=5,
     n_sample=100,
     n_step=250,
-    ratio=0.75,
+    ratio=0.5,
     return_state=False,
     verbose=True,
-):
-    energy_list_1, energy_list_2 = [], []
+) -> Union[mm.State, None]:
     state = None
     for lp in range(n_loop):
+        energy_list_1, energy_list_2 = [], []
         if platform is None:
             context = mm.Context(system, int_gen.integrator)
         else:
@@ -43,7 +44,7 @@ def optimize_logNk(
             context.setPositions(state.getPositions())
             context.setVelocities(state.getVelocities())
         for nsample in trange(n_sample):
-            context.step(n_step)
+            int_gen.integrator.step(n_step)
             if int_gen.boost_group == EnhancedGroup.ALL:
                 state = context.getState(getEnergy=True)
                 energy_list_1.append(
@@ -64,7 +65,7 @@ def optimize_logNk(
                     state.getPotentialEnergy().value_in_unit(unit.kilojoule_per_mole)
                 )
             else:
-                raise OpenITSException(f"Unknown boost group {int_gen.boost_group}")
+                raise Exception(f"Unknown boost group {int_gen.boost_group}")
         energy_list_1 = np.array(energy_list_1)
         energy_list_2 = np.array(energy_list_2)
         if (
