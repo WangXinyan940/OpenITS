@@ -10,7 +10,11 @@ ONE_4PI_EPS0 = 138.93545764438198
 
 
 def create_nonbonded_energy_group(
-    system: mm.System, group1: List[int], group2: List[int], scale: float = 1.0, energy_group: int = 1
+    system: mm.System,
+    group1: List[int],
+    group2: List[int],
+    scale: float = 1.0,
+    energy_group: int = 1,
 ) -> mm.System:
     nbforce: mm.NonbondedForce = None
     for force in system.getForces():
@@ -54,7 +58,10 @@ def check_rotamer_in_list(rot: List[int], rotlist: List[List[int]]) -> bool:
 
 
 def create_rotamer_torsion_energy_group(
-    system: mm.System, rotamers: List[List[int]], scale: float = 1.0, energy_group: int = 1
+    system: mm.System,
+    rotamers: List[List[int]],
+    scale: float = 1.0,
+    energy_group: int = 1,
 ) -> mm.System:
     torsionforce = None
     for force in system.getForces():
@@ -77,7 +84,11 @@ def create_rotamer_torsion_energy_group(
 
 
 def create_rotamer_14_energy_group(
-    system: mm.System, rotamers: List[List[int]], topology: app.Topology, scale: float = 1.0, energy_group: int = 1
+    system: mm.System,
+    rotamers: List[List[int]],
+    topology: app.Topology,
+    scale: float = 1.0,
+    energy_group: int = 1,
 ) -> mm.System:
     torsionforce = None
     nbforce = None
@@ -94,7 +105,7 @@ def create_rotamer_14_energy_group(
         raise OpenITSException(
             "Cannot find openmm.NonbondedForce in openmm.System, this method can only support systems where intermolecular interactions are described solely by openmm.NonbondedForce."
         )
-    
+
     # build bond connection
     conn = []
     for atom in topology.atoms():
@@ -103,12 +114,12 @@ def create_rotamer_14_energy_group(
         i1 = bond.atom1.index
         i2 = bond.atom2.index
         conn[i1].append(i2)
-        conn[i2].append(i1)       
-    
+        conn[i2].append(i1)
+
     # find 1-4 pairs around the rotamers
     pairs = []
     for rotamer in rotamers:
-        for ii in  [i for i in conn[rotamer[0]] if i not in rotamer]:
+        for ii in [i for i in conn[rotamer[0]] if i not in rotamer]:
             for jj in [j for j in conn[rotamer[1]] if j not in rotamer]:
                 if ii < jj:
                     pairs.append((ii, jj))
@@ -135,10 +146,26 @@ def create_rotamer_14_energy_group(
 
 
 protein_residues = [
-    "ALA", "ARG", "ASN", "ASP", "CYS", 
-    "GLN", "GLU", "GLY", "HIS", "ILE", 
-    "LEU", "LYS", "MET", "PHE", "PRO",
-    "SER", "THR", "TRP", "TYR", "VAL"
+    "ALA",
+    "ARG",
+    "ASN",
+    "ASP",
+    "CYS",
+    "GLN",
+    "GLU",
+    "GLY",
+    "HIS",
+    "ILE",
+    "LEU",
+    "LYS",
+    "MET",
+    "PHE",
+    "PRO",
+    "SER",
+    "THR",
+    "TRP",
+    "TYR",
+    "VAL",
 ]
 
 residue_rotamers = {
@@ -161,20 +188,31 @@ residue_rotamers = {
     "THR": [("CA", "CB")],
     "TRP": [("CA", "CB"), ("CB", "CG")],
     "TYR": [("CA", "CB"), ("CB", "CG")],
-    "VAL": [("CA", "CB")]
+    "VAL": [("CA", "CB")],
 }
 
 
-def find_backbone_rotamers(top: app.Topology, residue_indices: List[int] = None) -> List[Tuple[int]]:
+def find_backbone_rotamers(
+    top: app.Topology, residue_indices: List[int] = None
+) -> List[Tuple[int]]:
     # loop dihedrals with C, N, CA
     backbone_rots = []
     bond: app.topology.Bond = None
     for bond in top.bonds():
-        if residue_indices is not None and bond.atom1.residue.index not in residue_indices:
+        if (
+            residue_indices is not None
+            and bond.atom1.residue.index not in residue_indices
+        ):
             continue
-        if residue_indices is not None and bond.atom2.residue.index not in residue_indices:
+        if (
+            residue_indices is not None
+            and bond.atom2.residue.index not in residue_indices
+        ):
             continue
-        if bond.atom1.residue.name not in protein_residues or bond.atom2.residue.name not in protein_residues:
+        if (
+            bond.atom1.residue.name not in protein_residues
+            or bond.atom2.residue.name not in protein_residues
+        ):
             continue
         if bond.atom1.name in ["C", "N", "CA"] and bond.atom2.name in ["C", "N", "CA"]:
             ii = bond.atom1.index
@@ -185,15 +223,26 @@ def find_backbone_rotamers(top: app.Topology, residue_indices: List[int] = None)
     return backbone_rots
 
 
-def find_sidechain_rotamers(top: app.Topology, residue_indices: List[int] = None) -> List[Tuple[int]]:
+def find_sidechain_rotamers(
+    top: app.Topology, residue_indices: List[int] = None
+) -> List[Tuple[int]]:
     sidechain_rots = []
     bond: app.topology.Bond = None
     for bond in top.bonds():
-        if residue_indices is not None and bond.atom1.residue.index not in residue_indices:
+        if (
+            residue_indices is not None
+            and bond.atom1.residue.index not in residue_indices
+        ):
             continue
-        if residue_indices is not None and bond.atom2.residue.index not in residue_indices:
+        if (
+            residue_indices is not None
+            and bond.atom2.residue.index not in residue_indices
+        ):
             continue
-        if bond.atom1.residue.name not in protein_residues or bond.atom2.residue.name not in protein_residues:
+        if (
+            bond.atom1.residue.name not in protein_residues
+            or bond.atom2.residue.name not in protein_residues
+        ):
             continue
         if bond.atom1.residue.index != bond.atom2.residue.index:
             continue
@@ -210,4 +259,3 @@ def find_sidechain_rotamers(top: app.Topology, residue_indices: List[int] = None
                 ii, jj = jj, ii
             sidechain_rots.append((ii, jj))
     return sidechain_rots
-    
